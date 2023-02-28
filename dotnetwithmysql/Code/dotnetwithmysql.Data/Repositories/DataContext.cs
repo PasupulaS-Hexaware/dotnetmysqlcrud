@@ -1,4 +1,4 @@
-using dotnetwithmysql.Entities.Entities
+using dotnetwithmysql.Entities.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
