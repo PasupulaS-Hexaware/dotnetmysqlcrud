@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/aspnet:3.1 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
+WORKDIR /src
+COPY ["Code/dotnetmysqlbpcr.Api/dotnetmysqlbpcr.Api.csproj", "Code/dotnetmysqlbpcr.Api/"]
+COPY ["Code/dotnetmysqlbpcr.Business/dotnetmysqlbpcr.Business.csproj", "Code/dotnetmysqlbpcr.Business/"]
+COPY ["Code/dotnetmysqlbpcr.Data/dotnetmysqlbpcr.Data.csproj", "Code/dotnetmysqlbpcr.Data/"]
+COPY ["Code/dotnetmysqlbpcr.Entities/dotnetmysqlbpcr.Entities.csproj", "Code/dotnetmysqlbpcr.Entities/"]
+COPY ["Code/dotnetmysqlbpcr.Test.Api/dotnetmysqlbpcr.Test.Api.csproj", "Code/dotnetmysqlbpcr.Test.Api/"]
+COPY ["Code/dotnetmysqlbpcr.Test.Business/dotnetmysqlbpcr.Test.Business.csproj", "Code/dotnetmysqlbpcr.Test.Business/"]
+RUN dotnet restore "Code/dotnetmysqlbpcr.Api/dotnetmysqlbpcr.Api.csproj"
+COPY . .
+WORKDIR "/src/Code/dotnetmysqlbpcr.Api"
+RUN dotnet build "dotnetmysqlbpcr.Api.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "dotnetmysqlbpcr.Api.csproj" -c Release -o /app/publish
+
+WORKDIR /src
+RUN dotnet test --results-directory /testresults --logger "trx;LogFileName=testresults.Api.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=/testresults/coverage/ /p:MergeWith=/testresults/coverage/coverage.json "Code/dotnetmysqlbpcr.Test.Api/dotnetmysqlbpcr.Test.Api.csproj"
+RUN dotnet test --results-directory /testresults --logger "trx;LogFileName=testresults.Api.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=/testresults/coverage/ /p:MergeWith=/testresults/coverage/coverage.json "Code/dotnetmysqlbpcr.Test.Business/dotnetmysqlbpcr.Test.Business.csproj"
